@@ -19,13 +19,23 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK commandline tools
         uses: android-actions/setup-android@v3
         with:
-          packages: |
-            platform-tools
-            platforms;android-34
-            build-tools;34.0.0
+          # do not list packages here; we'll call sdkmanager explicitly below
+          accept-licenses: true
+
+      - name: Install Android SDK packages (platform-tools, platform 34, build-tools)
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          # Ensure sdkmanager is available on PATH (setup-android adds it)
+          sdkmanager --version
+          # Install packages and accept licenses (yes| to auto-answer)
+          yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          # Accept any remaining licences
+          yes | sdkmanager --licenses --sdk_root="${ANDROID_SDK_ROOT}"
+        env:
+          ANDROID_SDK_ROOT: ${{ runner.tool_cache }}/android-sdk
 
       - name: Grant gradlew execute permission
         run: chmod +x ./gradlew
